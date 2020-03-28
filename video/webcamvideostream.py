@@ -61,6 +61,3 @@ class WebcamVideoStream:
         # wait until stream resources are released (producer thread might be still grabbing frame)
         if self.thread is not None:
             self.thread.join()  # properly handle thread exit
-
-    def isOpened(self):
-        return self.stream.isOpened()

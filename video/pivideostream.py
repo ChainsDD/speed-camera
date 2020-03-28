@@ -13,8 +13,8 @@ class PiVideoStream:
         self.camera.framerate = framerate
         self.camera.hflip = hflip
         self.camera.vflip = vflip
-        self.rawCapture = PiRGBArray(self.camera, size=resolution)
-        self.stream = self.camera.capture_continuous(self.rawCapture,
+        self.raw_capture = PiRGBArray(self.camera, size=resolution)
+        self.stream = self.camera.capture_continuous(self.raw_capture,
                                                      format="bgr",
                                                      use_video_port=True)
 
@@ -35,17 +35,17 @@ class PiVideoStream:
 
     def update(self):
         """ keep looping infinitely until the thread is stopped """
-        for f in self.stream:
+        for frame in self.stream:
             # grab the frame from the stream and clear the stream in
             # preparation for the next frame
-            self.frame = f.array
-            self.rawCapture.truncate(0)
+            self.frame = frame.array
+            self.raw_capture.truncate(0)
 
             # if the thread indicator variable is set, stop the thread
             # and resource camera resources
             if self.stopped:
                 self.stream.close()
-                self.rawCapture.close()
+                self.raw_capture.close()
                 self.camera.close()
                 return
 

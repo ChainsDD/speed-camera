@@ -287,10 +287,12 @@ if pluginEnable:     # Check and verify plugin and load variable overlay
 # import the necessary packages
 # -----------------------------
 try:  #Add this check in case running on non RPI platform using web cam
-    from picamera.array import PiRGBArray
-    from picamera import PiCamera, PiCameraMMALError
+    from video.pivideostream import PiVideoStream
+    from picamera import PiCameraMMALError
 except ImportError:
     WEBCAM = True
+
+from video import WebcamVideoStream
 
 if not WEBCAM:
     # Check that pi camera module is installed and enabled
@@ -358,127 +360,6 @@ else:
     speed_units = "kph"
     speed_conv_L2R = px_to_kph_L2R
     speed_conv_R2L = px_to_kph_R2L
-
-#------------------------------------------------------------------------------
-class PiVideoStream:
-    def __init__(self, resolution, framerate, rotation, hflip, vflip):
-        """ initialize the camera and stream """
-        self.camera = PiCamera()
-        self.camera.resolution = resolution
-        self.camera.rotation = rotation
-        self.camera.framerate = framerate
-        self.camera.hflip = hflip
-        self.camera.vflip = vflip
-        self.rawCapture = PiRGBArray(self.camera, size=resolution)
-        self.stream = self.camera.capture_continuous(self.rawCapture,
-                                                     format="bgr",
-                                                     use_video_port=True)
-
-        """
-        initialize the frame and the variable used to indicate
-        if the thread should be stopped
-        """
-        self.thread = None
-        self.frame = None
-        self.stopped = False
-
-    def start(self):
-        """ start the thread to read frames from the video stream """
-        self.thread = Thread(target=self.update, args=())
-        self.thread.daemon = True
-        self.thread.start()
-        return self
-
-    def update(self):
-        """ keep looping infinitely until the thread is stopped """
-        for f in self.stream:
-            # grab the frame from the stream and clear the stream in
-            # preparation for the next frame
-            self.frame = f.array
-            self.rawCapture.truncate(0)
-
-            # if the thread indicator variable is set, stop the thread
-            # and resource camera resources
-            if self.stopped:
-                self.stream.close()
-                self.rawCapture.close()
-                self.camera.close()
-                return
-
-    def read(self):
-        """ return the frame most recently read """
-        return self.frame
-
-    def stop(self):
-        """ indicate that the thread should be stopped """
-        self.stopped = True
-        if self.thread is not None:
-            self.thread.join()
-
-#------------------------------------------------------------------------------
-class WebcamVideoStream:
-    def __init__(self, src, width, height, hflip, vflip):
-        """
-        initialize the video camera stream and read the first frame
-        from the stream
-        """
-        self.stream = cv2.VideoCapture(src)
-        self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-        self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-        self.hflip = hflip
-        self.vflip = vflip
-        (self.grabbed, self.frame) = self.stream.read()
-        self.thread = None
-        # initialize the variable used to indicate if the thread should
-        # be stopped
-        self.stopped = False
-
-    def start(self):
-        """ start the thread to read frames from the video stream """
-        self.thread = Thread(target=self.update, args=())
-        self.thread.daemon = True
-        self.thread.start()
-        return self
-
-    def update(self):
-        """ keep looping infinitely until the thread is stopped """
-        while True:
-            # if the thread indicator variable is set, stop the thread
-            if self.stopped:
-                self.stream.release()
-                return
-            # otherwise, read the next frame from the stream
-            (self.grabbed, self.frame) = self.stream.read()
-            #check for valid frames
-            if not self.grabbed:
-                # no frames recieved, then safely exit
-                self.stopped = True
-        self.stream.release()    #release resources
-
-    def read(self):
-        """ return the frame most recently read
-            Note there will be a significant performance hit to
-            flip the webcam image so it is advised to just
-            physically flip the camera and avoid
-            setting WEBCAM_HFLIP = True or WEBCAM_VFLIP = True
-        """
-        if (self.hflip and self.vflip):
-            self.frame = cv2.flip(self.frame, -1)
-        elif self.hflip:
-            self.frame = cv2.flip(self.frame, 1)
-        elif self.vflip:
-            self.frame = cv2.flip(self.frame, 0)
-        return self.frame
-
-    def stop(self):
-        """ indicate that the thread should be stopped """
-        self.stopped = True
-        # wait until stream resources are released (producer thread might be still grabbing frame)
-        if self.thread is not None:
-            self.thread.join()  # properly handle thread exit
-
-    def isOpened(self):
-        return self.stream.isOpened()
 
 #------------------------------------------------------------------------------
 def get_fps(start_time, frame_count):

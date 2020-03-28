@@ -288,7 +288,7 @@ if pluginEnable:     # Check and verify plugin and load variable overlay
 # -----------------------------
 try:  #Add this check in case running on non RPI platform using web cam
     from picamera.array import PiRGBArray
-    from picamera import PiCamera
+    from picamera import PiCamera, PiCameraMMALError
 except ImportError:
     WEBCAM = True
 
@@ -361,16 +361,9 @@ else:
 
 #------------------------------------------------------------------------------
 class PiVideoStream:
-    def __init__(self, resolution=(CAMERA_WIDTH, CAMERA_HEIGHT),
-                 framerate=CAMERA_FRAMERATE, rotation=0,
-                 hflip=CAMERA_HFLIP, vflip=CAMERA_VFLIP):
+    def __init__(self, resolution, framerate, rotation, hflip, vflip):
         """ initialize the camera and stream """
-        try:
-            self.camera = PiCamera()
-        except:
-            logging.error("PiCamera Already in Use by Another Process")
-            logging.error("%s %s Exiting Due to Error", progName, progVer)
-            sys.exit(1)
+        self.camera = PiCamera()
         self.camera.resolution = resolution
         self.camera.rotation = rotation
         self.camera.framerate = framerate
@@ -424,16 +417,16 @@ class PiVideoStream:
 
 #------------------------------------------------------------------------------
 class WebcamVideoStream:
-    def __init__(self, CAM_SRC=WEBCAM_SRC, CAM_WIDTH=WEBCAM_WIDTH,
-                 CAM_HEIGHT=WEBCAM_HEIGHT):
+    def __init__(self, src, width, height, hflip, vflip):
         """
         initialize the video camera stream and read the first frame
         from the stream
         """
-        self.stream = CAM_SRC
-        self.stream = cv2.VideoCapture(CAM_SRC)
-        self.stream.set(3, CAM_WIDTH)
-        self.stream.set(4, CAM_HEIGHT)
+        self.stream = cv2.VideoCapture(src)
+        self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+        self.hflip = hflip
+        self.vflip = vflip
         (self.grabbed, self.frame) = self.stream.read()
         self.thread = None
         # initialize the variable used to indicate if the thread should
@@ -469,13 +462,12 @@ class WebcamVideoStream:
             physically flip the camera and avoid
             setting WEBCAM_HFLIP = True or WEBCAM_VFLIP = True
         """
-        if WEBCAM_FLIPPED:
-            if (WEBCAM_HFLIP and WEBCAM_VFLIP):
-                self.frame = cv2.flip(self.frame, -1)
-            elif WEBCAM_HFLIP:
-                self.frame = cv2.flip(self.frame, 1)
-            elif WEBCAM_VFLIP:
-                self.frame = cv2.flip(self.frame, 0)
+        if (self.hflip and self.vflip):
+            self.frame = cv2.flip(self.frame, -1)
+        elif self.hflip:
+            self.frame = cv2.flip(self.frame, 1)
+        elif self.vflip:
+            self.frame = cv2.flip(self.frame, 0)
         return self.frame
 
     def stop(self):
@@ -1538,10 +1530,13 @@ if __name__ == '__main__':
                 logging.info("Initializing USB Web Camera Try .. %i",
                              WEBCAM_TRIES)
                 # Start video stream on a processor Thread for faster speed
-                vs = WebcamVideoStream().start()
-                vs.CAM_SRC = WEBCAM_SRC
-                vs.CAM_WIDTH = WEBCAM_WIDTH
-                vs.CAM_HEIGHT = WEBCAM_HEIGHT
+                vs = WebcamVideoStream(
+                    src=WEBCAM_SRC,
+                    width=WEBCAM_WIDTH,
+                    height=WEBCAM_HEIGHT,
+                    hflip=WEBCAM_HFLIP,
+                    vflip=WEBCAM_VFLIP)
+                vs.start()
                 if WEBCAM_TRIES > 3:
                     logging.error("USB Web Cam Not Connecting to WEBCAM_SRC %i",
                                   WEBCAM_SRC)
@@ -1556,10 +1551,18 @@ if __name__ == '__main__':
             else:
                 logging.info("Initializing Pi Camera ....")
                 # Start a pi-camera video stream thread
-                vs = PiVideoStream().start()
-                vs.camera.rotation = CAMERA_ROTATION
-                vs.camera.hflip = CAMERA_HFLIP
-                vs.camera.vflip = CAMERA_VFLIP
+                try:
+                    vs = PiVideoStream(
+                        resolution=(CAMERA_WIDTH, CAMERA_HEIGHT),
+                        framerate=CAMERA_FRAMERATE,
+                        rotation=0,
+                        hflip=CAMERA_HFLIP,
+                        vflip=CAMERA_VFLIP)
+                except PiCameraMMALError:
+                    logging.error("PiCamera Already in Use by Another Process")
+                    logging.error("%s %s Exiting Due to Error", progName, progVer)
+                    sys.exit(1)
+                vs.start()
                 time.sleep(2.0)  # Allow PiCamera to initialize
 
             # Get actual image size from stream.

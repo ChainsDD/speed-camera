@@ -70,15 +70,14 @@ import sqlite3
 from threading import Thread
 import subprocess
 
-"""
-This is a dictionary of the default settings for speed-cam.py
-If you don't want to use a config.py file these will create the required
-variables with default values.  Change dictionary values if you want different
-variable default values.
-A message will be displayed if a variable is Not imported from config.py.
-Note: plugins can override default and config.py values if plugins are
-      enabled.  This happens after config.py variables are imported
-"""
+# This is a dictionary of the default settings for speed-cam.py
+# If you don't want to use a config.py file these will create the required
+# variables with default values.  Change dictionary values if you want different
+# variable default values.
+# A message will be displayed if a variable is Not imported from config.py.
+# Note: plugins can override default and config.py values if plugins are
+#       enabled.  This happens after config.py variables are imported
+
 default_settings = {
     'calibrate':True,
     'cal_obj_px_L2R':90,
@@ -170,11 +169,9 @@ cvBlue = (255, 0, 0)
 cvGreen = (0, 255, 0)
 cvRed = (0, 0, 255)
 
-"""
-Check for config.py variable file to import and warn if not Found.
-Logging is not used since the logFilePath variable is needed before
-setting up logging
-"""
+# Check for config.py variable file to import and warn if not Found.
+# Logging is not used since the logFilePath variable is needed before
+# setting up logging
 configFilePath = os.path.join(baseDir, "config.py")
 if os.path.exists(configFilePath):
     # Read Configuration variables from config.py file
@@ -186,10 +183,8 @@ else:
     print("WARN  : Missing config.py file - File Not Found %s"
           % configFilePath)
 
-"""
-Check if variables were imported from config.py. If not create variable using
-the values in the default_settings dictionary above.
-"""
+# Check if variables were imported from config.py. If not create variable using
+# the values in the default_settings dictionary above.
 for key, val in default_settings.items():
     try:
         exec(key)

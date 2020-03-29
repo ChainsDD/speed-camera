@@ -292,7 +292,7 @@ try:  #Add this check in case running on non RPI platform using web cam
 except ImportError:
     WEBCAM = True
 
-from video import WebcamVideoStream
+from video import WebcamVideoStream, Resolution
 
 if not WEBCAM:
     # Check that pi camera module is installed and enabled
@@ -1412,7 +1412,7 @@ if __name__ == '__main__':
                              WEBCAM_TRIES)
                 # Start video stream on a processor Thread for faster speed
                 vs = WebcamVideoStream(
-                    resolution=(WEBCAM_WIDTH, WEBCAM_HEIGHT),
+                    Resolution(WEBCAM_WIDTH, WEBCAM_HEIGHT),
                     hflip=WEBCAM_HFLIP,
                     vflip=WEBCAM_VFLIP,
                     src=WEBCAM_SRC)
@@ -1433,7 +1433,7 @@ if __name__ == '__main__':
                 # Start a pi-camera video stream thread
                 try:
                     vs = PiVideoStream(
-                        resolution=(CAMERA_WIDTH, CAMERA_HEIGHT),
+                        Resolution(CAMERA_WIDTH, CAMERA_HEIGHT),
                         hflip=CAMERA_HFLIP,
                         vflip=CAMERA_VFLIP,
                         framerate=CAMERA_FRAMERATE)

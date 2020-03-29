@@ -1412,11 +1412,10 @@ if __name__ == '__main__':
                              WEBCAM_TRIES)
                 # Start video stream on a processor Thread for faster speed
                 vs = WebcamVideoStream(
-                    src=WEBCAM_SRC,
-                    width=WEBCAM_WIDTH,
-                    height=WEBCAM_HEIGHT,
+                    resolution=(WEBCAM_WIDTH, WEBCAM_HEIGHT),
                     hflip=WEBCAM_HFLIP,
-                    vflip=WEBCAM_VFLIP)
+                    vflip=WEBCAM_VFLIP,
+                    src=WEBCAM_SRC)
                 vs.start()
                 if WEBCAM_TRIES > 3:
                     logging.error("USB Web Cam Not Connecting to WEBCAM_SRC %i",
@@ -1435,10 +1434,9 @@ if __name__ == '__main__':
                 try:
                     vs = PiVideoStream(
                         resolution=(CAMERA_WIDTH, CAMERA_HEIGHT),
-                        framerate=CAMERA_FRAMERATE,
-                        rotation=0,
                         hflip=CAMERA_HFLIP,
-                        vflip=CAMERA_VFLIP)
+                        vflip=CAMERA_VFLIP,
+                        framerate=CAMERA_FRAMERATE)
                 except PiCameraMMALError:
                     logging.error("PiCamera Already in Use by Another Process")
                     logging.error("%s %s Exiting Due to Error", progName, progVer)

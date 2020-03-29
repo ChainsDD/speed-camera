@@ -5,11 +5,10 @@ from picamera import PiCamera
 # pylint: enable=import-error
 
 class PiVideoStream:
-    def __init__(self, resolution, framerate, rotation, hflip, vflip):
+    def __init__(self, resolution, hflip=False, vflip=False, framerate=30):
         """ initialize the camera and stream """
         self.camera = PiCamera()
         self.camera.resolution = resolution
-        self.camera.rotation = rotation
         self.camera.framerate = framerate
         self.camera.hflip = hflip
         self.camera.vflip = vflip

@@ -49,9 +49,12 @@ Temporary Items
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.pv[cod]
+*.py[cod]
 *$py.class
 
-### Project specific files ###
+### VisualStudioCode ###
+.vscode/*
+
+### Project Specific ###
 data/
 media/

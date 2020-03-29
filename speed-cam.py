@@ -70,15 +70,14 @@ import sqlite3
 from threading import Thread
 import subprocess
 
-"""
-This is a dictionary of the default settings for speed-cam.py
-If you don't want to use a config.py file these will create the required
-variables with default values.  Change dictionary values if you want different
-variable default values.
-A message will be displayed if a variable is Not imported from config.py.
-Note: plugins can override default and config.py values if plugins are
-      enabled.  This happens after config.py variables are imported
-"""
+# This is a dictionary of the default settings for speed-cam.py
+# If you don't want to use a config.py file these will create the required
+# variables with default values.  Change dictionary values if you want different
+# variable default values.
+# A message will be displayed if a variable is Not imported from config.py.
+# Note: plugins can override default and config.py values if plugins are
+#       enabled.  This happens after config.py variables are imported
+
 default_settings = {
     'calibrate':True,
     'cal_obj_px_L2R':90,
@@ -170,11 +169,9 @@ cvBlue = (255, 0, 0)
 cvGreen = (0, 255, 0)
 cvRed = (0, 0, 255)
 
-"""
-Check for config.py variable file to import and warn if not Found.
-Logging is not used since the logFilePath variable is needed before
-setting up logging
-"""
+# Check for config.py variable file to import and warn if not Found.
+# Logging is not used since the logFilePath variable is needed before
+# setting up logging
 configFilePath = os.path.join(baseDir, "config.py")
 if os.path.exists(configFilePath):
     # Read Configuration variables from config.py file
@@ -186,10 +183,8 @@ else:
     print("WARN  : Missing config.py file - File Not Found %s"
           % configFilePath)
 
-"""
-Check if variables were imported from config.py. If not create variable using
-the values in the default_settings dictionary above.
-"""
+# Check if variables were imported from config.py. If not create variable using
+# the values in the default_settings dictionary above.
 for key, val in default_settings.items():
     try:
         exec(key)
@@ -225,7 +220,7 @@ try:
     from search_config import search_dest_path
 except ImportError:
     search_dest_path = 'media/search'
-    logging.warn("Problem importing search_dest_path variable")
+    logging.warning("Problem importing search_dest_path variable")
     logging.info("Setting default value search_dest_path = %s", search_dest_path)
 
 # Import Settings from specified plugin if pluginEnable=True
@@ -241,7 +236,7 @@ if pluginEnable:     # Check and verify plugin and load variable overlay
         logging.info("Rerun github curl install script to install plugins")
         logging.info("https://github.com/pageauc/pi-timolo/wiki/")
         logging.info("How-to-Install-or-Upgrade#quick-install")
-        logging.warn("%s %s Exiting Due to Error", progName, progVer)
+        logging.warning("%s %s Exiting Due to Error", progName, progVer)
         sys.exit(1)
     elif not os.path.exists(pluginPath):
         logging.error("File Not Found pluginName %s", pluginPath)
@@ -259,7 +254,7 @@ if pluginEnable:     # Check and verify plugin and load variable overlay
         logging.info("or Rerun github curl install command.  See github wiki")
         logging.info("https://github.com/pageauc/speed-camera/wiki/")
         logging.info("How-to-Install-or-Upgrade#quick-install")
-        logging.warn("%s %s Exiting Due to Error", progName, progVer)
+        logging.warning("%s %s Exiting Due to Error", progName, progVer)
         sys.exit(1)
     else:
         pluginCurrent = os.path.join(pluginDir, "current.py")
@@ -270,7 +265,7 @@ if pluginEnable:     # Check and verify plugin and load variable overlay
             logging.error('Copy Failed from %s to %s - %s',
                           pluginPath, pluginCurrent, err)
             logging.info("Check permissions, disk space, Etc.")
-            logging.warn("%s %s Exiting Due to Error", progName, progVer)
+            logging.warning("%s %s Exiting Due to Error", progName, progVer)
             sys.exit(1)
         logging.info("Import Plugin %s", pluginPath)
         # add plugin directory to program PATH
@@ -278,7 +273,7 @@ if pluginEnable:     # Check and verify plugin and load variable overlay
         try:
             from plugins.current import *
         except ImportError:
-            logging.warn("Problem importing variables from %s", pluginDir)
+            logging.warning("Problem importing variables from %s", pluginDir)
         try:
             if os.path.exists(pluginCurrent):
                 os.remove(pluginCurrent)
@@ -286,7 +281,7 @@ if pluginEnable:     # Check and verify plugin and load variable overlay
             if os.path.exists(pluginCurrentpyc):
                 os.remove(pluginCurrentpyc)
         except OSError as err:
-            logging.warn("Failed To Remove File %s - %s",
+            logging.warning("Failed To Remove File %s - %s",
                          pluginCurrentpyc, err)
 
 # import the necessary packages
@@ -1068,7 +1063,7 @@ def speed_notify():
         print("Logging Messages Disabled per verbose=%s" % verbose)
 
     if calibrate:
-        logging.warn("IMPORTANT: Camera Is In Calibration Mode ....")
+        logging.warning("IMPORTANT: Camera Is In Calibration Mode ....")
 
     logging.info("Begin Motion Tracking .....")
 
@@ -1118,10 +1113,10 @@ def speed_camera():
     speed_notify()
     # Warn user of performance hit if webcam image flipped
     if (WEBCAM and WEBCAM_FLIPPED):
-        logging.warn("Recommend you do NOT Flip Webcam stream")
-        logging.warn("Otherwise SLOW streaming Will Result...")
-        logging.warn("If necessary physically flip camera and")
-        logging.warn("Set config.py WEBCAM_HFLIP and WEBCAM_VFLIP to False")
+        logging.warning("Recommend you do NOT Flip Webcam stream")
+        logging.warning("Otherwise SLOW streaming Will Result...")
+        logging.warning("If necessary physically flip camera and")
+        logging.warning("Set config.py WEBCAM_HFLIP and WEBCAM_VFLIP to False")
     # initialize a cropped grayimage1 image
     image2 = vs.read()  # Get image from VideoSteam thread instance
     prev_image = image2  # make a copy of the first image
@@ -1131,8 +1126,8 @@ def speed_camera():
         image_crop = image2[y_upper:y_lower, x_left:x_right]
     except:
         vs.stop()
-        logging.warn("Problem Connecting To Camera Stream.")
-        logging.warn("Restarting Camera.  One Moment Please ...")
+        logging.warning("Problem Connecting To Camera Stream.")
+        logging.warning("Restarting Camera.  One Moment Please ...")
         time.sleep(4)
         return
     grayimage1 = cv2.cvtColor(image_crop, cv2.COLOR_BGR2GRAY)
